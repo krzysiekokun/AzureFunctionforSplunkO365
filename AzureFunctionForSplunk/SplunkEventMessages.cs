@@ -74,6 +74,7 @@ namespace AzureFunctionForSplunk
         public async Task Emit()
         {
             string outputBinding = Utils.getEnvironmentVariable("outputBinding");
+            Log.LogInformation("Attemping to emit message with binding=" + outputBinding);
             if (outputBinding.Length == 0)
             {
                 Log.LogError("Value for outputBinding is required. Permitted values are: 'proxy', 'hec', 'eventhub'.");
@@ -83,7 +84,9 @@ namespace AzureFunctionForSplunk
             splunkEventMessages = new List<string>();
             foreach (var item in azureMonitorMessages)
             {
-                splunkEventMessages.Add(item.GetSplunkEventFromMessage());
+                string processedMessage = item.GetSplunkEventFromMessage();
+                Log.LogInformation("processing message" + processedMessage);
+                splunkEventMessages.Add(processedMessage);
             }
 
             switch (outputBinding)
@@ -201,135 +204,135 @@ namespace AzureFunctionForSplunk
         }
     }
 
-    public class DiagnosticLogsSplunkEventMessages : SplunkEventMessages
-    {
-        public DiagnosticLogsSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log)
-        {
-            CategoryFileName = "DiagnosticLogCategories.json";
-        }
+    //public class DiagnosticLogsSplunkEventMessages : SplunkEventMessages
+    //{
+    //    public DiagnosticLogsSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log)
+    //    {
+    //        CategoryFileName = "DiagnosticLogCategories.json";
+    //    }
 
-        public override void Ingest(string[] records)
-        {
-            // Subscription-based: sourceType depends on the message category and the ResourceType
-            // Tenant-based: sourceType depends on the message category and the ProviderType
+    //    public override void Ingest(string[] records)
+    //    {
+    //        // Subscription-based: sourceType depends on the message category and the ResourceType
+    //        // Tenant-based: sourceType depends on the message category and the ProviderType
 
-            foreach (var record in records)
-            {
-                var expandoConverter = new ExpandoObjectConverter();
-                var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
+    //        foreach (var record in records)
+    //        {
+    //            var expandoConverter = new ExpandoObjectConverter();
+    //            var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
 
-                var azMonMsg = new AzMonDiagnosticLog(expandoRecord);
+    //            var azMonMsg = new AzMonDiagnosticLog(expandoRecord);
 
-                var category = "none";
-                if (((IDictionary<String, Object>)expandoRecord).ContainsKey("category"))
-                {
-                    category = ((IDictionary<String, Object>)expandoRecord)["category"].ToString();
-                }
+    //            var category = "none";
+    //            if (((IDictionary<String, Object>)expandoRecord).ContainsKey("category"))
+    //            {
+    //                category = ((IDictionary<String, Object>)expandoRecord)["category"].ToString();
+    //            }
 
-                var resourceType = azMonMsg.ResourceType;
-                var providerName = azMonMsg.ProviderName;
+    //            var resourceType = azMonMsg.ResourceType;
+    //            var providerName = azMonMsg.ProviderName;
 
-                var logMessage = "";
-                var sourceType = "";
-                if (azMonMsg.TenantId.Length > 0)
-                {
-                    logMessage = $"********* ProviderName: {providerName}";
-                    sourceType = Utils.GetDictionaryValue(providerName.ToUpper() + "/" + category.ToUpper(), Categories) ?? "amdl:diagnostic";
-                }
-                else
-                {
-                    logMessage = $"********* ResourceType: {resourceType}";
-                    sourceType = Utils.GetDictionaryValue(resourceType.ToUpper() + "/" + category.ToUpper(), Categories) ?? "amdl:diagnostic";
-                }
+    //            var logMessage = "";
+    //            var sourceType = "";
+    //            if (azMonMsg.TenantId.Length > 0)
+    //            {
+    //                logMessage = $"********* ProviderName: {providerName}";
+    //                sourceType = Utils.GetDictionaryValue(providerName.ToUpper() + "/" + category.ToUpper(), Categories) ?? "amdl:diagnostic";
+    //            }
+    //            else
+    //            {
+    //                logMessage = $"********* ResourceType: {resourceType}";
+    //                sourceType = Utils.GetDictionaryValue(resourceType.ToUpper() + "/" + category.ToUpper(), Categories) ?? "amdl:diagnostic";
+    //            }
 
-                // log categories that aren't yet in the DiagnosticLogCategories.json file.
-                if (category != "none" && sourceType == "amdl:diagnostic")
-                {
-                    Log.LogInformation($"{logMessage}, category: {category} *********");
-                }
+    //            // log categories that aren't yet in the DiagnosticLogCategories.json file.
+    //            if (category != "none" && sourceType == "amdl:diagnostic")
+    //            {
+    //                Log.LogInformation($"{logMessage}, category: {category} *********");
+    //            }
 
-                azMonMsg.SplunkSourceType = sourceType;
+    //            azMonMsg.SplunkSourceType = sourceType;
 
-                azureMonitorMessages.Add(azMonMsg);
-            }
-        }
-    }
+    //            azureMonitorMessages.Add(azMonMsg);
+    //        }
+    //    }
+    //}
 
-    public class MetricsSplunkEventMessages : SplunkEventMessages
-    {
-        public MetricsSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log)
-        {
-            CategoryFileName = "MetricsCategories.json";
-        }
+    //public class MetricsSplunkEventMessages : SplunkEventMessages
+    //{
+    //    public MetricsSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log)
+    //    {
+    //        CategoryFileName = "MetricsCategories.json";
+    //    }
 
-        public override void Ingest(string[] records)
-        {
-            // sourceType depends on the ResourceType
-            foreach (var record in records)
-            {
-                var expandoConverter = new ExpandoObjectConverter();
-                var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
+    //    public override void Ingest(string[] records)
+    //    {
+    //        // sourceType depends on the ResourceType
+    //        foreach (var record in records)
+    //        {
+    //            var expandoConverter = new ExpandoObjectConverter();
+    //            var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
 
-                var azMonMsg = new AzMonDiagnosticLog(expandoRecord);
+    //            var azMonMsg = new AzMonDiagnosticLog(expandoRecord);
 
-                var resourceType = azMonMsg.ResourceType;
+    //            var resourceType = azMonMsg.ResourceType;
 
-                var sourceType = Utils.GetDictionaryValue(resourceType, Categories) ?? "amm:metrics";
+    //            var sourceType = Utils.GetDictionaryValue(resourceType, Categories) ?? "amm:metrics";
 
-                azMonMsg.SplunkSourceType = sourceType;
+    //            azMonMsg.SplunkSourceType = sourceType;
 
-                azureMonitorMessages.Add(azMonMsg);
-            }
-        }
+    //            azureMonitorMessages.Add(azMonMsg);
+    //        }
+    //    }
 
-    }
+    //}
 
-    public class WadSplunkEventMessages : SplunkEventMessages
-    {
-        public WadSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log) { }
+    //public class WadSplunkEventMessages : SplunkEventMessages
+    //{
+    //    public WadSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log) { }
 
-        public override void Ingest(string[] records)
-        {
-            foreach (var record in records)
-            {
-                var expandoConverter = new ExpandoObjectConverter();
-                var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
+    //    public override void Ingest(string[] records)
+    //    {
+    //        foreach (var record in records)
+    //        {
+    //            var expandoConverter = new ExpandoObjectConverter();
+    //            var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
 
-                if (((IDictionary<String,Object>)expandoRecord).ContainsKey("category"))
-                {
-                    azureMonitorMessages.Add(new WadAzMonLog(expandoRecord));
-                }
-                else if (((IDictionary<String, Object>)expandoRecord).ContainsKey("metricName"))
-                {
-                    azureMonitorMessages.Add(new WadAzMonMetric(expandoRecord));
-                }
-            }
-        }
+    //            if (((IDictionary<String,Object>)expandoRecord).ContainsKey("category"))
+    //            {
+    //                azureMonitorMessages.Add(new WadAzMonLog(expandoRecord));
+    //            }
+    //            else if (((IDictionary<String, Object>)expandoRecord).ContainsKey("metricName"))
+    //            {
+    //                azureMonitorMessages.Add(new WadAzMonMetric(expandoRecord));
+    //            }
+    //        }
+    //    }
 
-    }
+    //}
 
-    public class LadSplunkEventMessages : SplunkEventMessages
-    {
-        public LadSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log) { }
+    //public class LadSplunkEventMessages : SplunkEventMessages
+    //{
+    //    public LadSplunkEventMessages(IAsyncCollector<string> outputEvents, ILogger log) : base(outputEvents, log) { }
 
-        public override void Ingest(string[] records)
-        {
-            foreach (var record in records)
-            {
-                var expandoConverter = new ExpandoObjectConverter();
-                var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
+    //    public override void Ingest(string[] records)
+    //    {
+    //        foreach (var record in records)
+    //        {
+    //            var expandoConverter = new ExpandoObjectConverter();
+    //            var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
 
-                if (((IDictionary<String, Object>)expandoRecord).ContainsKey("category"))
-                {
-                    azureMonitorMessages.Add(new LadAzMonLog(expandoRecord));
-                }
-                else if (((IDictionary<String, Object>)expandoRecord).ContainsKey("metricName"))
-                {
-                    azureMonitorMessages.Add(new LadAzMonMetric(expandoRecord));
-                }
-            }
-        }
+    //            if (((IDictionary<String, Object>)expandoRecord).ContainsKey("category"))
+    //            {
+    //                azureMonitorMessages.Add(new LadAzMonLog(expandoRecord));
+    //            }
+    //            else if (((IDictionary<String, Object>)expandoRecord).ContainsKey("metricName"))
+    //            {
+    //                azureMonitorMessages.Add(new LadAzMonMetric(expandoRecord));
+    //            }
+    //        }
+    //    }
 
-    }
+    //}
 
 }
