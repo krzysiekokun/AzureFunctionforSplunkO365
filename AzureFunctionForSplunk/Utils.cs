@@ -276,7 +276,7 @@ namespace AzureFunctionForSplunk
                     throw new ArgumentException("Having provided a Splunk cert thumbprint, the address must be https://whatever");
                 }
             }
-
+            log.LogInformation("emmiting to " + splunkAddress);
             //ServicePointManager.Expect100Continue = true;
             //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             //ServicePointManager.ServerCertificateValidationCallback += new RemoteCertificateValidationCallback(ValidateMyCert);
@@ -297,6 +297,7 @@ namespace AzureFunctionForSplunk
                     };
 
                     HttpResponseMessage response = await SingleHttpClientInstance.SendToService(httpRequestMessage);
+                    log.LogInformation("Splunk response:" + response.StatusCode);
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
                         throw new System.Net.Http.HttpRequestException($"StatusCode from Splunk: {response.StatusCode}, and reason: {response.ReasonPhrase}");
@@ -304,10 +305,12 @@ namespace AzureFunctionForSplunk
                 }
                 catch (System.Net.Http.HttpRequestException e)
                 {
+                    log.LogError("HttpRequestException " + e.Message);
                     throw new System.Net.Http.HttpRequestException("Sending to Splunk. Is Splunk service running?", e);
                 }
                 catch (Exception f)
                 {
+                    log.LogError("General error: " + f.Message);
                     throw new System.Exception("Sending to Splunk. Unplanned exception.", f);
                 }
             }
