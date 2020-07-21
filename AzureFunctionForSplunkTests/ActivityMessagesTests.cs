@@ -17,7 +17,6 @@ namespace AzureFunctionForSplunkTests
             var azMonMsgs = (AzMonMessages)Activator.CreateInstance(typeof(ActivityLogMessages), TestUtils.CreateLogger(LoggerTypes.Null));
             var result = azMonMsgs.DecomposeIncomingBatch(new string[] { File.ReadAllText("message1.txt") });
 
-
         }
 
         

@@ -56,8 +56,6 @@ namespace AzureFunctionForSplunk
 
             try
             {
-                decomposed = azMonMsgs.DecomposeIncomingBatch(messages);
-
                 if (logIncoming)
                 {
                     try
@@ -74,6 +72,8 @@ namespace AzureFunctionForSplunk
                     }
                 }
 
+                decomposed = azMonMsgs.DecomposeIncomingBatch(messages);
+                
             }
             catch (Exception)
             {
