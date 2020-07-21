@@ -282,6 +282,7 @@ namespace AzureFunctionForSplunk
             //ServicePointManager.ServerCertificateValidationCallback += new RemoteCertificateValidationCallback(ValidateMyCert);
 
             var client = new SingleHttpClientInstance();
+            log.LogInformation("Http Client instance created");
             foreach (string item in standardizedEvents)
             {
                 try
@@ -295,6 +296,8 @@ namespace AzureFunctionForSplunk
                         },
                         Content = new StringContent(item, Encoding.UTF8, "application/json")
                     };
+                    log.LogInformation("Http Client request headers:" + httpRequestMessage.Headers);
+                    log.LogInformation("Http Client request content:" + httpRequestMessage.Content);
 
                     HttpResponseMessage response = await SingleHttpClientInstance.SendToService(httpRequestMessage);
                     log.LogInformation("Splunk response:" + response.StatusCode);
