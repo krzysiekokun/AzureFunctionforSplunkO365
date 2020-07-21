@@ -128,7 +128,7 @@ namespace AzureFunctionForSplunk
             {
                 var expandoConverter = new ExpandoObjectConverter();
                 var expandoRecord = JsonConvert.DeserializeObject<ExpandoObject>(record, expandoConverter);
-
+                Log.LogInformation("Expando object created");
                 //string operationName = ((IDictionary<String, Object>)expandoRecord)["operationName"].ToString();
 
                 //var splits = operationName.Split('/');
