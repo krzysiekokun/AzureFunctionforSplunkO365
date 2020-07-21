@@ -43,7 +43,7 @@ namespace AzureFunctionForSplunk
             set
             {
                 this._Message = value;
-                //MessageTime = ((dynamic)value).time;
+                MessageTime = DateTime.Now;
             }
         }
 
@@ -53,7 +53,7 @@ namespace AzureFunctionForSplunk
         //public string ResourceName { get; set; }
         //public string ResourceGroup { get; set; }
         public string SplunkSourceType { get; set; }
-        //public DateTime MessageTime { get; set; }
+        public DateTime MessageTime { get; set; }
         //public string TenantId { get; set; }
         //public string ProviderName { get; set; }
 
@@ -70,22 +70,22 @@ namespace AzureFunctionForSplunk
 
         public string GetSplunkEventFromMessage()
         {
-            //ExpandoObject o = new ExpandoObject();
-            //((IDictionary<String, Object>)o).Add("sourcetype", SplunkSourceType);
-            //((IDictionary<String, Object>)o).Add("time", unixTime().ToString("0.000"));
-            //((IDictionary<String, Object>)o).Add("event", Message);
+            ExpandoObject o = new ExpandoObject();
+            ((IDictionary<String, Object>)o).Add("sourcetype", SplunkSourceType);
+            ((IDictionary<String, Object>)o).Add("time", unixTime().ToString("0.000"));
+            ((IDictionary<String, Object>)o).Add("event", Message);
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(Message);
 
             return json;
         }
 
-        //double unixTime()
-        //{
-        //    double unixTimestamp = MessageTime.Ticks - new DateTime(1970, 1, 1).Ticks;
-        //    unixTimestamp /= TimeSpan.TicksPerSecond;
-        //    return unixTimestamp;
-        //}
-        
+        double unixTime()
+        {
+            double unixTimestamp = MessageTime.Ticks - new DateTime(1970, 1, 1).Ticks;
+            unixTimestamp /= TimeSpan.TicksPerSecond;
+            return unixTimestamp;
+        }
+
         //protected void GetStandardProperties()
         //{
         //    string pattern;

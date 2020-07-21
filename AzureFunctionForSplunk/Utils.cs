@@ -297,7 +297,7 @@ namespace AzureFunctionForSplunk
                         Content = new StringContent(item, Encoding.UTF8, "application/json")
                     };
                     log.LogInformation("Http Client request headers:" + httpRequestMessage.Headers);
-                    log.LogInformation("Http Client request content:" + httpRequestMessage.Content);
+                    log.LogInformation("Http Client request content:" + item);
 
                     HttpResponseMessage response = await SingleHttpClientInstance.SendToService(httpRequestMessage);
                     log.LogInformation("Splunk response:" + response.StatusCode);

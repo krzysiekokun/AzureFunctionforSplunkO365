@@ -41,6 +41,7 @@ namespace AzureFunctionForSplunk
 
             foreach (var message in messages)
             {
+                Log.LogInformation("deserializing message: " + message);
                 dynamic obj = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(message);
 
                 if (((IDictionary<string, dynamic>)obj).ContainsKey("records"))
