@@ -50,7 +50,8 @@ namespace AzureFunctionForSplunk
             var batchId = Guid.NewGuid().ToString();
 
             bool logIncoming = Utils.getEnvironmentVariable("logIncomingBatches").ToLower() == "true";
-            
+            log.LogInformation($"Received {messages.Length} messages");
+
             var azMonMsgs = (AzMonMessages)Activator.CreateInstance(typeof(T1), log);
             List<string> decomposed = null;
 
@@ -64,6 +65,8 @@ namespace AzureFunctionForSplunk
                             new BlobAttribute($"transmission-incoming/{batchId}", FileAccess.ReadWrite));
 
                         await blobWriter.UploadTextAsync(String.Join(",", messages));
+                        log.LogInformation($"Logged incoming to blob");
+
                     }
                     catch (Exception exIncomingBlob)
                     {
@@ -75,21 +78,30 @@ namespace AzureFunctionForSplunk
                 decomposed = azMonMsgs.DecomposeIncomingBatch(messages);
                 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                log.LogError("General error in message decompositon:" + ex.Message);
                 throw;
             }
+            log.LogInformation($"Decomposed {decomposed.Count} messages");
 
             if (decomposed.Count > 0)
             {
                 var splunkMsgs = (SplunkEventMessages)Activator.CreateInstance(typeof(T2), outputEvents, log);
+                log.LogInformation($"Splunk message created");
+
                 try
                 {
                     splunkMsgs.Ingest(decomposed.ToArray());
+                    log.LogInformation($"Splunk message ingested");
+
                     await splunkMsgs.Emit();
+                    log.LogInformation($"Splunk message emmited");
+
                 }
                 catch (Exception exEmit)
                 {
+                    log.LogError("General error in message transmition:" + exEmit.Message);
 
                     try
                     {
@@ -98,6 +110,8 @@ namespace AzureFunctionForSplunk
 
                         string json = await Task<string>.Factory.StartNew(() => JsonConvert.SerializeObject(splunkMsgs.splunkEventMessages));
                         await blobWriter.UploadTextAsync(json);
+                        log.LogInformation($"Logged transmition error to blob");
+
                     }
                     catch (Exception exFaultBlob)
                     {
