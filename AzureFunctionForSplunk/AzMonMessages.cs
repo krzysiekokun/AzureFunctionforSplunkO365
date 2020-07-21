@@ -53,9 +53,11 @@ namespace AzureFunctionForSplunk
 
                         decomposed.Add(stringRecord);
                     }
-                } else
+                } 
+                else
                 {
-                    Log.LogError("AzMonMessages: invalid message structure, missing 'records'");
+                    decomposed.Add(message);
+                    //Log.LogError("AzMonMessages: invalid message structure, missing 'records'");
                 }
             }
 
