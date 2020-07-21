@@ -1,0 +1,1 @@
+New-AzResourceGroupDeployment -ResourceGroupName adamjagsplunkfunc -TemplateFile template.json -TemplateParameterFile parameters.json

@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "adamjagsplunk3"
+    },
+    "appServicePlanType": {
+      "value": "Consumption"
+    },
+    "appServicePlanTier": {
+      "value": "Standard"
+    },
+    "appServicePlanName": {
+      "value": "S1"
+    },
+    "appServicePlanCapacity": {
+      "value": 2
+    },
+    "appInsightsLocation": {
+      "value": "North Europe"
+    },
+    "appInsightsName": {
+      "value": "adamjagfuncappins"
+    },
+    "githubRepoURL": {
+      "value": "https://github.com/22449/AzureFunctionforSplunkDev"
+    },
+    "githubRepoBranch": {
+      "value": "HandleAuditEvents"
+    },
+    "eventHubConnectionString": {
+      "value": "Endpoint=sb://adamjageventhub.servicebus.windows.net/;SharedAccessKeyName=function;SharedAccessKey=T+L3vofqDVP1yDhncg05ompIocAKe4rxpT5aCKbtSEs="
+    },
+    "inputHubNameActivityLogs": {
+      "value": "insights-activity-logs"
+    },
+    "logIncomingBatches": {
+      "value": "true"
+    },
+    "consumerGroupNameActivityLog": {
+      "value": "$default"
+    },
+    "inputHubNameDiagnosticLogs": {
+      "value": "insights-logs-diagnostics"
+    },
+    "consumerGroupNameDiagnosticLogs": {
+      "value": "$default"
+    },
+    "inputHubNameMetrics": {
+      "value": "insights-metrics-pt1m"
+    },
+    "consumerGroupNameMetrics": {
+      "value": "$default"
+    },
+    "inputHubNameWAD": {
+      "value": "insights-telemetry-wad"
+    },
+    "consumerGroupNameWAD": {
+      "value": "$default"
+    },
+    "inputHubNameLAD": {
+      "value": "insights-telemetry-lad"
+    },
+    "consumerGroupNameLAD": {
+      "value": "$default"
+    },
+    "inputHubNameFaults": {
+      "value": "transmission-faults"
+    },
+    "splunkToken": {
+      "value": "test"
+    },
+    "splunkAddress": {
+      "value": "test"
+    },
+    "splunkCertThumbprint": {
+      "value": ""
+    },
+    "outputBinding": {
+      "value": "hec"
+    },
+    "outputHubConnection": {
+      "value": "Endpoint=sb://YOURNAMESPACE.servicebus.windows.net/;SharedAccessKeyName=YOURPOLICYNAME;SharedAccessKey=YOURPOLICYKEY"
+    },
+    "output-hub-name-proxy": {
+      "value": "collector-to-proxy"
+    }
+  }
+}
