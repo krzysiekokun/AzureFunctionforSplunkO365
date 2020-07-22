@@ -41,7 +41,7 @@ namespace AzureFunctionForSplunk
                             {
                                 elemets.Remove(key);
                             }
-                            decomposed.Add(JsonConvert.SerializeObject(elemets));
+                            decomposed.Add(JsonConvert.SerializeObject((dynamic)elemets).ToString());
                         }
                     }
                 }
