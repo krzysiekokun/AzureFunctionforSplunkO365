@@ -57,7 +57,7 @@ namespace AzureFunctionForSplunk
 
 
             }
-
+            Log.LogInformation($"Decomposed {decomposed.Count} messages");
             return decomposed;
         }
     }
