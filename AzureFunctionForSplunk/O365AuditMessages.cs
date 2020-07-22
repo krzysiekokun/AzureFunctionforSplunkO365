@@ -14,6 +14,7 @@ namespace AzureFunctionForSplunk
         public override List<string> DecomposeIncomingBatch(string[] messages)
         {
             List<string> decomposed = new List<string>();
+            Log.LogInformation($"Received  {messages.Length} messages for decomposition");
 
             foreach (var message in messages)
             {
@@ -26,39 +27,45 @@ namespace AzureFunctionForSplunk
 
                     foreach(var item in obj)
                     {
-                        var elemets = item as Dictionary<string, dynamic>;
-                        if (elemets != null)
-                        {
-                            List<string> keysToRemove = new List<string>();
-                            foreach(var pair in elemets)
-                            {
-                                if(pair.Value != null && string.IsNullOrEmpty(pair.Value.ToString()))
-                                {
-                                    keysToRemove.Add(pair.Key);
-                                }
-                            }
-                            foreach(string key in keysToRemove)
-                            {
-                                elemets.Remove(key);
-                            }
-                            decomposed.Add(JsonConvert.SerializeObject((dynamic)elemets).ToString());
-                        }
+                        RemoveEmptyProperties(item);
+                        decomposed.Add(JsonConvert.SerializeObject((dynamic)item).ToString());
+
                     }
                 }
                 else
                 {
                     //received single object
-                    decomposed.Add(message);
+                    dynamic obj = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(message);
+                    RemoveEmptyProperties(obj);
+                    decomposed.Add(JsonConvert.SerializeObject((dynamic)obj).ToString());
+
                 }
-
-
-
-
 
 
             }
             Log.LogInformation($"Decomposed {decomposed.Count} messages");
             return decomposed;
+        }
+
+        private void RemoveEmptyProperties(dynamic item)
+        {
+            var elements = item as Dictionary<string, dynamic>;
+            if (elements != null)
+            {
+                List<string> keysToRemove = new List<string>();
+                foreach (var pair in elements)
+                {
+                    if (pair.Value != null && string.IsNullOrEmpty(pair.Value.ToString()))
+                    {
+                        keysToRemove.Add(pair.Key);
+                    }
+                }
+                foreach (string key in keysToRemove)
+                {
+                    elements.Remove(key);
+                }
+                Log.LogInformation($"Message decompostion, removed {keysToRemove.Count} elements");
+            }
         }
     }
 }
