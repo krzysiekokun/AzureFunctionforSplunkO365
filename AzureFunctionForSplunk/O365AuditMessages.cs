@@ -17,16 +17,16 @@ namespace AzureFunctionForSplunk
 
             foreach (var message in messages)
             {
-                List<Dictionary<string, ExpandoObject>> l = new List<Dictionary<string, ExpandoObject>>();
+                List<Dictionary<string, dynamic>> l = new List<Dictionary<string, dynamic>>();
 
                 if (message.TrimStart().StartsWith('['))
                 {
                     //we received array of objects
-                    dynamic obj = JsonConvert.DeserializeObject<List<Dictionary<string, ExpandoObject>>>(message);
+                    dynamic obj = JsonConvert.DeserializeObject<List<Dictionary<string, dynamic>>>(message);
 
                     foreach(var item in obj)
                     {
-                        var elemets = item as Dictionary<string, ExpandoObject>;
+                        var elemets = item as Dictionary<string, dynamic>;
                         if (elemets != null)
                         {
                             List<string> keysToRemove = new List<string>();
