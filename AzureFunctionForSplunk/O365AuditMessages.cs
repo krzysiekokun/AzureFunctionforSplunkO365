@@ -55,7 +55,7 @@ namespace AzureFunctionForSplunk
                 List<string> keysToRemove = new List<string>();
                 foreach (var pair in elements)
                 {
-                    if (pair.Value != null && string.IsNullOrEmpty(pair.Value.ToString()))
+                    if (pair.Value != null && string.IsNullOrEmpty(pair.Value.ToString()) && pair.Value.ToString().ToLower() == "null")
                     {
                         keysToRemove.Add(pair.Key);
                     }
