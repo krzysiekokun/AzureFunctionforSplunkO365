@@ -199,7 +199,7 @@ namespace AzureFunctionForSplunk
                 //    }
                 //}
 
-                azureMonitorMessages.Add(new AzMonActivityLog(expandoRecord, "O365-Audit-Event"));
+                azureMonitorMessages.Add(new AzMonActivityLog(expandoRecord, "WAF-Audit-Event"));
             }
         }
     }
