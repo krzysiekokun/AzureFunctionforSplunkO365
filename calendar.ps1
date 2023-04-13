@@ -88,7 +88,7 @@ foreach ($userIdOrEmail in $emails) {
 $sortedResults = $allResults | Sort-Object -Property attendees -Descending
 
 # Zapisz wynik do pliku CSV
-$csvFilePath = "results_all_users.csv"
+$csvFilePath = "D:\events_calendar\results_all_users.csv"
 $sortedResults | Export-Csv -Path $csvFilePath -NoTypeInformation -Encoding UTF8
 
 Write-Host "Wyniki zapisane do pliku: $csvFilePath"
