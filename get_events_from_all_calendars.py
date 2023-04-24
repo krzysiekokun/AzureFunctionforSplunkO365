@@ -56,7 +56,7 @@ def filter_recurring_events(events):
     return [event for event in events if 'recurrence' in event]
 
 def save_to_csv(user_name, recurring_events, output_file):
-    with open(output_file, 'a', newline='', encoding='utf-8') as file:
+    with open(output_file, 'a', newline='', encoding='utf-8-sig') as file:
         csv_writer = csv.writer(file)
         for event in recurring_events:
             organizer = event['organizer']['emailAddress']['name'] if 'organizer' in event and 'emailAddress' in event['organizer'] and 'name' in event['organizer']['emailAddress'] else 'N/A'
@@ -81,7 +81,7 @@ def save_to_csv(user_name, recurring_events, output_file):
             ])
 
 # Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
-with open(output_file, 'w', newline='', encoding='utf-8') as file:
+with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
     csv_writer = csv.writer(file)
     csv_writer.writerow(['User', 'Event Subject', 'Start Time', 'End Time', 'Recurrence Pattern', 'Organizer', 'Attendees Count', 'Is Cancelled', 'Event Create Date', 'Recurrence Start Date', 'Recurrence End Date'])
 
@@ -99,7 +99,6 @@ if access_token:
                 recurring_events = filter_recurring_events(all_events)
 
                 save_to_csv(user_display_name, recurring_events, output_file)
-
 
     print(f'Zapisano cykliczne spotkania do pliku {output_file}')
 else:
