@@ -62,6 +62,10 @@ def save_to_csv(user_name, recurring_events, output_file):
             organizer = event['organizer']['emailAddress']['name'] if 'organizer' in event and 'emailAddress' in event['organizer'] and 'name' in event['organizer']['emailAddress'] else 'N/A'
             recurrence_pattern = event['recurrence']['pattern']['type'] if event['recurrence'] and 'pattern' in event['recurrence'] and 'type' in event['recurrence']['pattern'] else 'N/A'
             attendees_count = len(event['attendees']) if 'attendees' in event else 0
+            is_cancelled = event['isCancelled']
+            event_create_date = event['createdDateTime']
+            recurrence_start_date = event['recurrence']['range']['startDate'] if event['recurrence'] and 'range' in event['recurrence'] and 'startDate' in event['recurrence']['range'] else 'N/A'
+            recurrence_end_date = event['recurrence']['range']['endDate'] if event['recurrence'] and 'range' in event['recurrence'] and 'endDate' in event['recurrence']['range'] else 'N/A'
             csv_writer.writerow([
                 user_name,
                 event['subject'],
@@ -69,13 +73,17 @@ def save_to_csv(user_name, recurring_events, output_file):
                 event['end']['dateTime'],
                 recurrence_pattern,
                 organizer,
-                attendees_count
+                attendees_count,
+                is_cancelled,
+                event_create_date,
+                recurrence_start_date,
+                recurrence_end_date
             ])
 
 # Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
 with open(output_file, 'w', newline='', encoding='utf-8') as file:
     csv_writer = csv.writer(file)
-    csv_writer.writerow(['User', 'Event Subject', 'Start Time', 'End Time', 'Recurrence Pattern', 'Organizer', 'Attendees Count'])
+    csv_writer.writerow(['User', 'Event Subject', 'Start Time', 'End Time', 'Recurrence Pattern', 'Organizer', 'Attendees Count', 'Is Cancelled', 'Event Create Date', 'Recurrence Start Date', 'Recurrence End Date'])
 
 access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
@@ -91,6 +99,7 @@ if access_token:
                 recurring_events = filter_recurring_events(all_events)
 
                 save_to_csv(user_display_name, recurring_events, output_file)
+
 
     print(f'Zapisano cykliczne spotkania do pliku {output_file}')
 else:
