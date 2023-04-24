@@ -60,7 +60,7 @@ def save_to_csv(user_name, recurring_events, output_file):
         csv_writer = csv.writer(file)
         for event in recurring_events:
             organizer = event['organizer']['emailAddress']['name'] if 'organizer' in event and 'emailAddress' in event['organizer'] and 'name' in event['organizer']['emailAddress'] else 'N/A'
-            recurrence_pattern = event['recurrence']['pattern'] if event['recurrence'] and 'pattern' in event['recurrence'] else 'N/A'
+            recurrence_pattern = event['recurrence']['pattern']['type'] if event['recurrence'] and 'pattern' in event['recurrence'] and 'type' in event['recurrence']['pattern'] else 'N/A'
             csv_writer.writerow([
                 user_name,
                 event['subject'],
