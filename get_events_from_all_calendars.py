@@ -61,19 +61,21 @@ def save_to_csv(user_name, recurring_events, output_file):
         for event in recurring_events:
             organizer = event['organizer']['emailAddress']['name'] if 'organizer' in event and 'emailAddress' in event['organizer'] and 'name' in event['organizer']['emailAddress'] else 'N/A'
             recurrence_pattern = event['recurrence']['pattern']['type'] if event['recurrence'] and 'pattern' in event['recurrence'] and 'type' in event['recurrence']['pattern'] else 'N/A'
+            attendees_count = len(event['attendees']) if 'attendees' in event else 0
             csv_writer.writerow([
                 user_name,
                 event['subject'],
                 event['start']['dateTime'],
                 event['end']['dateTime'],
                 recurrence_pattern,
-                organizer
+                organizer,
+                attendees_count
             ])
 
 # Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
 with open(output_file, 'w', newline='', encoding='utf-8') as file:
     csv_writer = csv.writer(file)
-    csv_writer.writerow(['User', 'Event Subject', 'Start Time', 'End Time', 'Recurrence Pattern', 'Organizer'])
+    csv_writer.writerow(['User', 'Event Subject', 'Start Time', 'End Time', 'Recurrence Pattern', 'Organizer', 'Attendees Count'])
 
 access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
