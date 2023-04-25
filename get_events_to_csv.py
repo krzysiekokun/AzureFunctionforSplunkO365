@@ -67,33 +67,35 @@ def save_to_csv(user_email, events, output_file):
     with open(output_file, 'a', newline='', encoding='utf-8') as file:
         csv_writer = csv.writer(file, delimiter=';')
         for event in events:
-            organizer_name = event['organizer']['emailAddress']['name']
-            subject = event['subject']
-            attendees_count = len(event['attendees'])
-            is_organizer = user_email == event['organizer']['emailAddress']['address']
-            recurrence = event.get('recurrence', None) is not None
-            created_date_time = event['createdDateTime']
-            last_modified_date_time = event['lastModifiedDateTime']
-            start_date_time = event['start']['dateTime']
-            end_date_time = event['end']['dateTime']
-            is_cancelled = event['isCancelled']
-            is_all_day = event['isAllDay']
-            importance = event['importance']
+            recurrence = event.get('recurrence', None)
+            if recurrence is not None:
+                organizer_name = event['organizer']['emailAddress']['name']
+                subject = event['subject']
+                attendees_count = len(event['attendees'])
+                is_organizer = user_email == event['organizer']['emailAddress']['address']
+                created_date_time = event['createdDateTime']
+                last_modified_date_time = event['lastModifiedDateTime']
+                start_date_time = event['start']['dateTime']
+                end_date_time = event['end']['dateTime']
+                is_cancelled = event['isCancelled']
+                is_all_day = event['isAllDay']
+                importance = event['importance']
 
-            csv_writer.writerow([
-                organizer_name,
-                subject,
-                attendees_count,
-                is_organizer,
-                recurrence,
-                created_date_time,
-                last_modified_date_time,
-                start_date_time,
-                end_date_time,
-                is_cancelled,
-                is_all_day,
-                importance
-            ])
+                csv_writer.writerow([
+                    organizer_name,
+                    subject,
+                    attendees_count,
+                    is_organizer,
+                    recurrence,
+                    created_date_time,
+                    last_modified_date_time,
+                    start_date_time,
+                    end_date_time,
+                    is_cancelled,
+                    is_all_day,
+                    importance
+                ])
+
 
 # Add header to the CSV file before saving data
 with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
@@ -108,10 +110,14 @@ if access_token:
         user_id = user['id']
         user_email = user['mail']
 
+        print(f'Processing events for user: {user_email}')
         user_events = get_all_events(access_token, user_id)
 
         save_to_csv(user_email, user_events, output_file)
 
-    print(f'Saved selected event data to {output_file}')
+        recurring_events_count = sum(1 for event in user_events if event.get('recurrence', None) is not None)
+        print(f'Number of recurring events for user {user_email}: {recurring_events_count}')
+
+    print(f'Zapisano wybrane dane wydarzeń do pliku {output_file}')
 else:
-    print("Cannot obtain access token.")
+    print("Nie można uzyskać tokena dostępu.")
