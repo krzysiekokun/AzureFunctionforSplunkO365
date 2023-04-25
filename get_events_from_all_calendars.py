@@ -60,13 +60,18 @@ def get_all_events(access_token, user_id, start_time, end_time):
         print("Error:", response.status_code, response.text)
         return []
         
-def filter_recurring_events(events, user_email):
+def filter_recurring_events(events, user_email, start_time, end_time):
     filtered_events = []
     for event in events:
+        event_start_time = datetime.fromisoformat(event['start']['dateTime'])
+        event_end_time = datetime.fromisoformat(event['end']['dateTime'])
+
         if ('recurrence' in event and
-            event['organizer']['emailAddress']['address'] == user_email):
+            event['organizer']['emailAddress']['address'] == user_email and
+            event_start_time >= start_time and event_end_time <= end_time):
             filtered_events.append(event)
     return filtered_events
+
 
 
 
@@ -116,7 +121,7 @@ if access_token:
         user_email = user['mail']
         
         all_events = get_all_events(access_token, user_id, start_time, end_time)
-        recurring_events = filter_recurring_events(all_events, user_email)
+        recurring_events = filter_recurring_events(all_events, user_email, start_time, end_time)
 
         save_to_csv(recurring_events, output_file)
 
