@@ -24,19 +24,23 @@ def get_access_token(client_id, client_secret, tenant_id):
         print("Error:", response.status_code, response.text)
         return None
 
-def get_user(access_token, user_identifier):
-    url = f'https://graph.microsoft.com/v1.0/users/{user_identifier}'
-    headers = {
-        'Authorization': 'Bearer ' + access_token,
-        'Content-Type': 'application/json',
-        'Accept-Charset': 'utf-8'
-    }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print("Error:", response.status_code, response.text)
-        return None
+def get_users(access_token, users_file):
+    users = []
+    with open(users_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            user_identifier = line.strip()
+            url = f'https://graph.microsoft.com/v1.0/users/{user_identifier}'
+            headers = {
+                'Authorization': 'Bearer ' + access_token,
+                'Content-Type': 'application/json',
+                'Accept-Charset': 'utf-8'
+            }
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                users.append(response.json())
+            else:
+                print("Error:", response.status_code, response.text)
+    return users
 
 def get_all_events(access_token, user_id):
     url = f'https://graph.microsoft.com/v1.0/users/{user_id}/events'
@@ -66,6 +70,7 @@ def save_to_csv(recurring_events, output_file):
             event_create_date = event['createdDateTime']
             recurrence_start_date = event['recurrence']['range']['startDate'] if event['recurrence'] and 'range' in event['recurrence'] and 'startDate' in event['recurrence']['range'] else 'N/A'
             recurrence_end_date = event['recurrence']['range']['endDate'] if event['recurrence'] and 'range' in event['recurrence'] and 'endDate' in event['recurrence']['range'] else 'N/A'
+
             csv_writer.writerow([
                 organizer,
                 event['subject'],
@@ -89,7 +94,7 @@ if access_token:
     users = get_users(access_token, users_file)
     for user in users:
         user_id = user['id']
-
+        
         all_events = get_all_events(access_token, user_id)
         recurring_events = filter_recurring_events(all_events)
 
