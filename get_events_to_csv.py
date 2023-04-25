@@ -69,6 +69,11 @@ def save_to_csv(user_email, events, output_file):
         for event in events:
             recurrence = event.get('recurrence', None)
             if recurrence is not None:
+                pattern_type = recurrence['pattern']['type']
+                pattern_interval = recurrence['pattern']['interval']
+                pattern_days_of_week = recurrence['pattern'].get('daysOfWeek', '')
+                range_type = recurrence['range']['type']
+
                 organizer_name = event['organizer']['emailAddress']['name']
                 subject = event['subject']
                 attendees_count = len(event['attendees'])
@@ -93,14 +98,18 @@ def save_to_csv(user_email, events, output_file):
                     end_date_time,
                     is_cancelled,
                     is_all_day,
-                    importance
+                    importance,
+                    pattern_type,
+                    pattern_interval,
+                    pattern_days_of_week,
+                    range_type
                 ])
 
 
 # Add header to the CSV file before saving data
 with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
     csv_writer = csv.writer(file, delimiter=';')
-    csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Has Recurrence', 'Created Date Time', 'Last Modified Date Time', 'Start Date Time', 'End Date Time', 'Is Cancelled', 'Is All Day', 'Importance'])
+    csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Pattern Type', 'Pattern Interval', 'Days of Week', 'Range Type', 'Created Date Time', 'Last Modified Date Time', 'Start Date Time', 'End Date Time', 'Is Cancelled', 'Is All Day', 'Importance'])
 
 access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
