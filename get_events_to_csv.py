@@ -47,14 +47,21 @@ def get_all_events(access_token, user_id):
     headers = {
         'Authorization': 'Bearer ' + access_token,
         'Content-Type': 'application/json',
-        'Accept-Charset': 'utf-8'
+        'Accept-Charset': 'utf-8-sig'
     }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()['value']
-    else:
-        print("Error:", response.status_code, response.text)
-        return []
+    
+    events = []
+    while url:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            result = response.json()
+            events.extend(result['value'])
+            url = result.get('@odata.nextLink', None)
+        else:
+            print("Error:", response.status_code, response.text)
+            return []
+    
+    return events
 
 def save_to_csv(user_email, events, output_file):
     with open(output_file, 'a', newline='', encoding='utf-8') as file:
@@ -75,7 +82,7 @@ def save_to_csv(user_email, events, output_file):
             ])
 
 # Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
-with open(output_file, 'w', newline='', encoding='utf-8') as file:
+with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
     csv_writer = csv.writer(file, delimiter=';')
     csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Has Recurrence'])
 
