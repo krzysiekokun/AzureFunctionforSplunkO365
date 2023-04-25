@@ -1,6 +1,6 @@
 import requests
 import csv
-import time
+from datetime import datetime
 
 # Uzupełnij te wartości swoimi danymi
 client_id = 'f3dc1fe5-d774-4ac0-960f-67138f65a42d'
@@ -43,8 +43,11 @@ def get_users(access_token, users_file):
                 print("Error:", response.status_code, response.text)
     return users
 
-def get_all_events(access_token, user_id, top=999):
-    url = f'https://graph.microsoft.com/v1.0/users/{user_id}/events?$top={top}'
+def get_all_events(access_token, user_id, start_time, end_time):
+    start_time = start_time.isoformat()
+    end_time = end_time.isoformat()
+
+    url = f'https://graph.microsoft.com/v1.0/users/{user_id}/calendarview?startDateTime={start_time}&endDateTime={end_time}'
     headers = {
         'Authorization': 'Bearer ' + access_token,
         'Content-Type': 'application/json',
@@ -56,24 +59,30 @@ def get_all_events(access_token, user_id, top=999):
     else:
         print("Error:", response.status_code, response.text)
         return []
-
-def filter_recurring_events(events, user_email):
-    return [event for event in events if 'recurrence' in event and event['organizer'] and event['organizer']['emailAddress'] and event['organizer']['emailAddress']['address'] == user_email]
+        
+def filter_recurring_events(events, user_email, start_time, end_time):
+    filtered_events = []
+    for event in events:
+        if ('recurrence' in event and event['organizer']['emailAddress']['address'] == user_email and
+                datetime.fromisoformat(event['start']['dateTime']) >= start_time and
+                datetime.fromisoformat(event['end']['dateTime']) <= end_time):
+            filtered_events.append(event)
+    return filtered_events
 
 def save_to_csv(recurring_events, output_file):
     with open(output_file, 'a', newline='', encoding='utf-8') as file:
         csv_writer = csv.writer(file, delimiter=';')
         for event in recurring_events:
-            organizer = event['organizer']['emailAddress']['name'] if event['organizer'] and event['organizer']['emailAddress'] else 'N/A'
+            organizer = event['organizer']['emailAddress']['name']
             subject = event['subject']
-            attendees_count = len(event['attendees']) if 'attendees' in event else 0
+            attendees_count = len(event['attendees'])
             recurrence_pattern = event['recurrence']['pattern']['type'] if event['recurrence'] and 'pattern' in event['recurrence'] else 'N/A'
-            start_time = event['start']['dateTime']
-            end_time = event['end']['dateTime']
             is_cancelled = event['isCancelled']
-            event_creation_date = event['createdDateTime']
+            event_create_date = event['createdDateTime']
             recurrence_range_start_date = event['recurrence']['range']['startDate'] if event['recurrence'] and 'range' in event['recurrence'] else 'N/A'
             recurrence_range_end_date = event['recurrence']['range']['endDate'] if event['recurrence'] and 'range' in event['recurrence'] else 'N/A'
+            start_time = event['start']['dateTime']
+            end_time = event['end']['dateTime']
 
             csv_writer.writerow([
                 organizer,
@@ -83,7 +92,7 @@ def save_to_csv(recurring_events, output_file):
                 start_time,
                 end_time,
                 is_cancelled,
-                event_creation_date,
+                event_create_date,
                 recurrence_range_start_date,
                 recurrence_range_end_date
             ])
@@ -91,21 +100,25 @@ def save_to_csv(recurring_events, output_file):
 # Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
 with open(output_file, 'w', newline='', encoding='utf-8') as file:
     csv_writer = csv.writer(file, delimiter=';')
-    csv_writer.writerow(['Organizer', 'Event Subject', 'Attendees Count', 'Recurrence Pattern', 'Start Time', 'End Time', 'Is Cancelled', 'Event Creation Date', 'Recurrence Range Start Date', 'Recurrence Range End Date'])
+    csv_writer.writerow(['Organizer', 'Event Subject', 'Attendees Count', 'Recurrence Pattern', 'Start Time', 'End Time', 'Is Cancelled', 'Event Create Date', 'Recurrence Range Start Date', 'Recurrence Range End Date'])
 
 access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
     users = get_users(access_token, users_file)
+
+    # Ustaw zakres dat, dla których chcesz pobrać wydarzenia
+    start_time = datetime(2023, 1, 1)
+    end_time = datetime(2023, 6, 30)
+
     for user in users:
         user_id = user['id']
-        user_email = user['mail'] if 'mail' in user else user['userPrincipalName']
+        user_email = user['mail']
         
-        all_events = get_all_events(access_token, user_id)
-        recurring_events = filter_recurring_events(all_events, user_email)
+        all_events = get_all_events(access_token, user_id, start_time, end_time)
+        recurring_events = filter_recurring_events(all_events, user_email, start_time, end_time)
 
         save_to_csv(recurring_events, output_file)
 
     print(f'Zapisano cykliczne spotkania do pliku {output_file}')
 else:
     print("Nie można uzyskać tokena dostępu.")
-
