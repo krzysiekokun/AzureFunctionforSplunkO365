@@ -72,19 +72,33 @@ def save_to_csv(user_email, events, output_file):
             attendees_count = len(event['attendees'])
             is_organizer = user_email == event['organizer']['emailAddress']['address']
             recurrence = event.get('recurrence', None) is not None
+            created_date_time = event['createdDateTime']
+            last_modified_date_time = event['lastModifiedDateTime']
+            start_date_time = event['start']['dateTime']
+            end_date_time = event['end']['dateTime']
+            is_cancelled = event['isCancelled']
+            is_all_day = event['isAllDay']
+            importance = event['importance']
 
             csv_writer.writerow([
                 organizer_name,
                 subject,
                 attendees_count,
                 is_organizer,
-                recurrence
+                recurrence,
+                created_date_time,
+                last_modified_date_time,
+                start_date_time,
+                end_date_time,
+                is_cancelled,
+                is_all_day,
+                importance
             ])
 
-# Dodaj nagłówek do pliku CSV przed rozpoczęciem zapisywania danych
+# Add header to the CSV file before saving data
 with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
     csv_writer = csv.writer(file, delimiter=';')
-    csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Has Recurrence'])
+    csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Has Recurrence', 'Created Date Time', 'Last Modified Date Time', 'Start Date Time', 'End Date Time', 'Is Cancelled', 'Is All Day', 'Importance'])
 
 access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
@@ -98,6 +112,6 @@ if access_token:
 
         save_to_csv(user_email, user_events, output_file)
 
-    print(f'Zapisano wybrane dane wydarzeń do pliku {output_file}')
+    print(f'Saved selected event data to {output_file}')
 else:
-    print("Nie można uzyskać tokena dostępu.")
+    print("Cannot obtain access token.")
