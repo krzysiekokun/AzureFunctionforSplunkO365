@@ -43,11 +43,8 @@ def get_users(access_token, users_file):
                 print("Error:", response.status_code, response.text)
     return users
 
-def get_all_events(access_token, user_id, start_time, end_time):
-    start_time = start_time.isoformat()
-    end_time = end_time.isoformat()
-
-    url = f'https://graph.microsoft.com/v1.0/users/{user_id}/calendarview?startDateTime={start_time}&endDateTime={end_time}'
+def get_all_events(access_token, user_id):
+    url = f'https://graph.microsoft.com/v1.0/users/{user_id}/events'
     headers = {
         'Authorization': 'Bearer ' + access_token,
         'Content-Type': 'application/json',
@@ -60,15 +57,11 @@ def get_all_events(access_token, user_id, start_time, end_time):
         print("Error:", response.status_code, response.text)
         return []
         
-def filter_recurring_events(events, user_email, start_time, end_time):
+def filter_recurring_events(events, user_email):
     filtered_events = []
     for event in events:
-        event_start_time = datetime.fromisoformat(event['start']['dateTime'])
-        event_end_time = datetime.fromisoformat(event['end']['dateTime'])
-
         if ('recurrence' in event and
-            event['organizer']['emailAddress']['address'] == user_email and
-            event_start_time >= start_time and event_end_time <= end_time):
+            event['organizer']['emailAddress']['address'] == user_email):
             filtered_events.append(event)
     return filtered_events
 
@@ -113,15 +106,12 @@ access_token = get_access_token(client_id, client_secret, tenant_id)
 if access_token:
     users = get_users(access_token, users_file)
 
-    start_time = datetime(2023, 1, 1)
-    end_time = datetime(2023, 6, 30)
-
     for user in users:
         user_id = user['id']
         user_email = user['mail']
         
-        all_events = get_all_events(access_token, user_id, start_time, end_time)
-        recurring_events = filter_recurring_events(all_events, user_email, start_time, end_time)
+        all_events = get_all_events(access_token, user_id)
+        recurring_events = filter_recurring_events(all_events, user_email)
 
         save_to_csv(recurring_events, output_file)
 
