@@ -3,6 +3,10 @@ import csv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import dateutil.parser
+from colorama import Fore, Style, init
+
+# Initialize colorama
+init(autoreset=True)
 
 client_id = 'f3dc1fe5-d774-4ac0-960f-67138f65a42d'
 client_secret = '7H_8Q~xfYahdoMGiSdqNGwAKfsMA2J0Q8tgP2bRg'
@@ -132,11 +136,12 @@ if access_token:
     users = get_users(access_token, users_file)
     failed_users = []
 
-    for user in users:
+    total_users = len(users)
+    for index, user in enumerate(users, start=1):
         user_id = user['id']
         user_email = user['mail']
 
-        print(f'Processing events for user: {user_email}')
+        print(Fore.GREEN + f'Processing events for user {index}/{total_users}: {user_email}')
         total_events = 0
 
         for start_date, end_date in date_ranges:
@@ -157,14 +162,16 @@ if access_token:
                 failed_users.append(user_email)
                 break
 
-        print(f'Finished processing events for user: {user_email}. Total events: {total_events}')
+        print(Fore.RED + f'Finished processing events for user: {user_email}. Total events: {total_events}')
 
-    with open('failed_users.txt', 'w', encoding='utf-8') as file:
-        for email in failed_users:
-            file.write(f"{email}\n")
-
-    print(f"Finished processing all users. Failed users: {len(failed_users)}")
+    print(f'Saved selected event data to file {output_file}')
+    if failed_users:
+        with open('failed_users.txt', 'w', encoding='utf-8') as file:
+            for failed_user in failed_users:
+                file.write(f"{failed_user}\n")
+        print(f"Failed users have been saved to 'failed_users.txt'")
 else:
-    print("Failed to obtain access token.")
+    print("Cannot obtain access token.")
+
 
 
