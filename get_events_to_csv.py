@@ -1,17 +1,29 @@
 import requests
 import csv
-import time
 from datetime import datetime
-
-def is_token_expired(token_received_time, token_expires_in):
-    current_time = time.time()
-    return current_time > token_received_time + token_expires_in
+from dateutil.relativedelta import relativedelta
+import dateutil.parser
 
 client_id = 'f3dc1fe5-d774-4ac0-960f-67138f65a42d'
 client_secret = '7H_8Q~xfYahdoMGiSdqNGwAKfsMA2J0Q8tgP2bRg'
 tenant_id = '9be8208b-1b85-4ac6-ac80-bbe2d6889d37'
 users_file = 'users.txt'
 output_file = 'filtered_events.csv'
+
+start_year = 2023
+start_month = 1
+end_year = 2023
+end_month = 6
+
+start_date = dateutil.parser.parse(f"{start_year}-{start_month:02d}-01T00:00:00Z")
+end_date = dateutil.parser.parse(f"{end_year}-{end_month:02d}-01T00:00:00Z")
+
+date_ranges = []
+while start_date < end_date:
+    range_start = start_date
+    range_end = start_date + relativedelta(months=1) - relativedelta(seconds=1)
+    date_ranges.append((range_start.isoformat(), range_end.isoformat()))
+    start_date = range_end + relativedelta(seconds=1)
 
 def get_access_token(client_id, client_secret, tenant_id):
     url = f'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token'
@@ -24,12 +36,15 @@ def get_access_token(client_id, client_secret, tenant_id):
     }
     response = requests.post(url, headers=headers, data=data)
     if response.status_code == 200:
-        token_data = response.json()
-        return token_data['access_token'], time.time(), token_data['expires_in'] - 300  # Subtract 300 seconds to account for possible delays
+        result = response.json()
+        return result['access_token'], datetime.now(), result['expires_in']
     else:
         print("Error:", response.status_code, response.text)
         return None, None, None
 
+def is_token_expired(token_received_time, token_expires_in):
+    elapsed_time = (datetime.now() - token_received_time).seconds
+    return elapsed_time >= token_expires_in - 60
 
 def get_users(access_token, users_file):
     users = []
@@ -56,8 +71,10 @@ def get_all_events(access_token, user_id, start_date, end_date):
         'Content-Type': 'application/json',
         'Accept-Charset': 'utf-8-sig'
     }
+    
     params = {
-        '$filter': f"start/dateTime ge '{start_date}' and end/dateTime le '{end_date}'"
+        '$filter': f"start/dateTime ge '{start_date}' and end/dateTime le '{end_date}'",
+        '$orderby': 'start/dateTime'
     }
     
     events = []
@@ -67,12 +84,14 @@ def get_all_events(access_token, user_id, start_date, end_date):
             result = response.json()
             events.extend(result['value'])
             url = result.get('@odata.nextLink', None)
-            params = {}  # clear params for the next request
+            if url:
+                params = None  # Set params to None to avoid adding the filter again in the next request
         else:
             print("Error:", response.status_code, response.text)
             return []
     
     return events
+
 
 
 def recurrence_pattern_to_string(pattern_type, pattern_interval, pattern_days_of_week, range_type):
@@ -123,6 +142,7 @@ with open(output_file, 'w', newline='', encoding='utf-8-sig') as file:
     csv_writer.writerow(['Organizer Name', 'Subject', 'Attendees Count', 'Is Organizer', 'Recurrence Pattern', 'Created Date Time', 'Last Modified Date Time', 'Start Date Time', 'End Date Time', 'Is Cancelled', 'Is All Day', 'Importance'])
 
 access_token, token_received_time, token_expires_in = get_access_token(client_id, client_secret, tenant_id)
+
 if access_token:
     users = get_users(access_token, users_file)
 
@@ -131,15 +151,24 @@ if access_token:
         user_email = user['mail']
 
         print(f'Processing events for user: {user_email}')
+        user_events = []
 
-        if is_token_expired(token_received_time, token_expires_in):
-            access_token, token_received_time, token_expires_in = get_access_token(client_id, client_secret, tenant_id)
+        for start_date, end_date in date_ranges:
+            print(f'Fetching events between {start_date} and {end_date}...')
 
-        user_events = get_all_events(access_token, user_id, start_date, end_date)
+            if is_token_expired(token_received_time, token_expires_in):
+                access_token, token_received_time, token_expires_in = get_access_token(client_id, client_secret, tenant_id)
+
+            events = get_all_events(access_token, user_id, start_date, end_date)
+            user_events.extend(events)
+            print(f'Fetched {len(events)} events for user {user_email} between {start_date} and {end_date}')
+
+        print(f'Saving events to the output file {output_file}...')
         save_to_csv(user_email, user_events, output_file)
 
         recurring_events_count = sum(1 for event in user_events if event.get('recurrence', None) is not None)
         print(f'Total events for user {user_email}: {len(user_events)} (recurring events: {recurring_events_count})')
+        print(f'Finished processing events for user {user_email}\n')
 
     print(f'Saved selected event data to file {output_file}')
 else:
